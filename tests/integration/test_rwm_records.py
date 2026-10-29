@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 pytestmark = pytest.mark.slow  # every test of this file needs an MCMC run
+pytest.importorskip("bayesian_inversion")  # the MCMC needs it
 
 # Settings of the reference RWM run
 N_ITER = 100

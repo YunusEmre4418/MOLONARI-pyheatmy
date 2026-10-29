@@ -11,7 +11,6 @@ import pytest
 
 from pyheatmy import Column, Layer
 from pyheatmy.config import ZERO_CELSIUS
-from pyheatmy.core import compute_energy
 from pyheatmy.params import Param
 
 TEST_DATA = Path(__file__).resolve().parents[1] / "data"  # copies of data/ and configuration/ of MOLONARI-computo
@@ -111,6 +110,7 @@ def run_demo_mcmc(new_demo_column):
 def replay(new_demo_column):
     """Function: solves the direct model on a separate column with the MCMC parameters of a state,
     and returns its energy, temperatures and flows."""
+    from pyheatmy.core import compute_energy  # here, as only the MCMC tests use it: it needs bayesian_inversion
     column = new_demo_column()
 
     def solve(state):

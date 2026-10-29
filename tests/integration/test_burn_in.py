@@ -14,6 +14,7 @@ from pyheatmy.config import NSECINDAY, ZERO_CELSIUS
 from pyheatmy.synthetic_MOLONARI import synthetic_MOLONARI
 
 pytestmark = pytest.mark.slow  # every test of this file needs an MCMC run
+pytest.importorskip("bayesian_inversion")  # the MCMC needs it
 
 SEED = 0
 DEPTH_SENSORS = [0.1, 0.2, 0.3, 0.4]

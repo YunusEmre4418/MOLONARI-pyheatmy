@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyheatmy"
-version = "0.10.0"
+version = "0.10.1"
 readme = "README.md"
 license =  {file = "LICENSE"}
 authors = [
@@ -12,7 +12,6 @@ authors = [
   {name = "Youri Tchouboukoff", email = "youri.tchouboukoff@mines-paristech.fr"},
 ]
 dependencies = [
-    "bayesian_inversion",
     "matplotlib",
     "scipy",
     "pandas",
@@ -26,6 +25,9 @@ dependencies = [
     "nbmake"
 ]
 requires-python = ">= 3.9"
+
+[project.optional-dependencies]
+inversion = ["bayesian_inversion"]  # the priors and Column.compute_mcmc; the direct model runs without it
 
 [project.urls]
 Homepage = "https://github.com/YunusEmre4418/MOLONARI-pyheatmy"

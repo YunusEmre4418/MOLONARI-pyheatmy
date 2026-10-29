@@ -9,7 +9,11 @@ import pytest
 from pyheatmy import Layer
 from pyheatmy.config import INTRINK_DEFAULT, INTRINK_MAX
 from pyheatmy.layers import layersListCreator
-from pyheatmy.params import Prior
+from pyheatmy.params import INVERSION_IMPORT_ERROR
+
+if INVERSION_IMPORT_ERROR is None:
+    from pyheatmy.params import Prior
+needs_inversion = pytest.mark.skipif(INVERSION_IMPORT_ERROR is not None, reason="the priors need bayesian_inversion")
 
 NAME = "L"
 Z_LOW = 0.4
@@ -66,18 +70,21 @@ def test_layers_list_creator_refuses_old_notation():
         layersListCreator([(NAME, Z_LOW, OLD_NOTATION, 0.1, 2.0, 4e6)])
 
 
+@needs_inversion
 @pytest.mark.parametrize("prior", INVALID_INTRINK_PRIORS)
 def test_layer_refuses_prior_outside_range(prior):
     with pytest.raises(ValueError, match="IntrinK"):
         Layer(NAME, Z_LOW, Prior_IntrinK=Prior(*prior))
 
 
+@needs_inversion
 @pytest.mark.parametrize("prior", INVALID_INTRINK_PRIORS)
 def test_set_priors_refuses_prior_outside_range(prior):
     with pytest.raises(ValueError, match="IntrinK"):
         Layer(NAME, Z_LOW).set_priors_from_dict(priors_with(prior))
 
 
+@needs_inversion
 def test_refused_priors_leave_layer_unchanged():
     layer = Layer(NAME, Z_LOW)
     layer.set_priors_from_dict(priors_with(VALID_INTRINK_PRIORS[0]))
@@ -88,6 +95,7 @@ def test_refused_priors_leave_layer_unchanged():
     assert layer.mcmc_params == params_before
 
 
+@needs_inversion
 @pytest.mark.parametrize("prior", VALID_INTRINK_PRIORS)
 def test_set_priors_accepts_prior_in_m2(prior):
     layer = Layer(NAME, Z_LOW)

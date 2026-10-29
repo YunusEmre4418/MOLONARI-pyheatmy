@@ -10,7 +10,14 @@ DREAM proposal, energy, Gelman-Rubin diagnostic) are in
 
 ## Installation
 
-Install `bayesian_inversion` first, then `pyheatmy`, from the two checkouts:
+The direct model needs `pyheatmy` only:
+
+```sh
+pip install -e path/to/pyheatmy
+```
+
+The priors and the MCMC (`Layer.set_priors_from_dict`, `Column.compute_mcmc`) also need `bayesian_inversion`,
+the optional dependency `inversion` of `pyheatmy`. It is not on PyPI: install it first, from its checkout.
 
 ```sh
 pip install -e path/to/bayesian_inversion
@@ -23,6 +30,8 @@ pip install -e path/to/pyheatmy
 python -m pytest tests            # about 2 minutes
 python -m pytest tests -m "not slow"
 ```
+
+Without `bayesian_inversion`, the tests of the priors and of the MCMC are skipped.
 
 ## Tutorials
 

@@ -4,6 +4,8 @@ the states, their energies, the acceptance rates, the quantiles and the sigma2 p
 import numpy as np
 import pytest
 
+pytest.importorskip("bayesian_inversion")  # the MCMC needs it
+
 from pyheatmy import core
 from pyheatmy.config import SIGMA2_MAX_T
 from pyheatmy.params import Prior

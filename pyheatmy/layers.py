@@ -1,7 +1,11 @@
+from __future__ import annotations  # the annotations name Prior, which is missing without bayesian_inversion
+
 import numpy as np
 from pyheatmy.config import *
 
-from pyheatmy.params import Param, Prior
+from pyheatmy.params import Param, INVERSION_IMPORT_ERROR, require_inversion
+if INVERSION_IMPORT_ERROR is None:  # bayesian_inversion is optional: only the priors need it
+    from pyheatmy.params import Prior
 
 
 def check_IntrinK(value):
@@ -85,6 +89,7 @@ class Layer:
     
     def set_priors_from_dict(self, priors_dict):
         """Assigne les priors depuis un dictionnaire."""
+        require_inversion("Layer.set_priors_from_dict")
         # Le prior sur IntrinK est vérifié avant toute modification de la couche.
         prior_IntrinK = Prior(*priors_dict['Prior_IntrinK'])
         check_IntrinK_prior(prior_IntrinK)

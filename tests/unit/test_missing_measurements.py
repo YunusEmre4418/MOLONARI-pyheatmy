@@ -9,8 +9,12 @@ import pytest
 
 from pyheatmy import Column, Layer
 from pyheatmy.config import NSECINDAY, ZERO_CELSIUS
-from pyheatmy.core import compute_energy
+from pyheatmy.params import INVERSION_IMPORT_ERROR
 from pyheatmy.synthetic_MOLONARI import synthetic_MOLONARI
+
+if INVERSION_IMPORT_ERROR is None:
+    from pyheatmy.core import compute_energy
+needs_inversion = pytest.mark.skipif(INVERSION_IMPORT_ERROR is not None, reason="the energy needs bayesian_inversion")
 
 DEPTH_SENSORS = [0.1, 0.2, 0.3, 0.4]
 T_MEAN = ZERO_CELSIUS + 12
@@ -69,6 +73,7 @@ def missing_warnings(record):
     return [str(w.message) for w in record if issubclass(w.category, UserWarning) and MISSING in str(w.message)]
 
 
+@needs_inversion
 def test_energy_leaves_out_missing_measurements():
     rng = np.random.default_rng(0)
     measured = T_MEAN + rng.normal(size=(len(DEPTH_SENSORS) - 1, N_TIMES))
@@ -81,6 +86,7 @@ def test_energy_leaves_out_missing_measurements():
     assert energy == pytest.approx(expected, rel=RTOL)
 
 
+@needs_inversion
 def test_energy_is_not_finite_when_the_model_is_not():
     measured = np.full((len(DEPTH_SENSORS) - 1, len(MISSING_TIMES)), T_MEAN)
     simulated = measured + SHIFT_K

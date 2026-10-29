@@ -15,7 +15,7 @@ from scipy.interpolate import interp1d
 from matplotlib.colors import LinearSegmentedColormap
 
 from pyheatmy.lagrange import Lagrange
-from pyheatmy.params import Param, Prior, PARAM_LIST, calc_K
+from pyheatmy.params import Param, PARAM_LIST, calc_K, INVERSION_IMPORT_ERROR, require_inversion
 from pyheatmy.state import State
 from pyheatmy.checker import checker
 from pyheatmy.config import *
@@ -23,7 +23,9 @@ from pyheatmy.linear_system import *
 
 from pyheatmy.utils import *
 from pyheatmy.layers import Layer, getListParameters
-from bayesian_inversion import compute_energy, compute_log_acceptance, gelman_rubin, perturbation_DREAM
+if INVERSION_IMPORT_ERROR is None:  # bayesian_inversion is optional: only Column.compute_mcmc uses it
+    from pyheatmy.params import Prior
+    from bayesian_inversion import compute_energy, compute_log_acceptance, gelman_rubin, perturbation_DREAM
 
 
 # Column is a monolithic class and pyheatmy is executable from there. Calculation, retrieval and plots are methods from the column class
@@ -834,6 +836,7 @@ class Column:  # colonne de sédiments verticale entre le lit de la rivière et 
         n_sous_ech_space=1,
         threshold=GELMANRCRITERIA,
     ):
+        require_inversion("Column.compute_mcmc")
         if verbose:
             print(
                 "--- Compute MCMC ---",

@@ -3,6 +3,8 @@ which the parameters are stored, not their physical values."""
 
 import pytest
 
+pytest.importorskip("bayesian_inversion")  # the priors need it
+
 from pyheatmy import Layer
 
 RELATIVE_TOLERANCE = 1e-9  # the log and symlog transforms round-trip to rounding error
