@@ -20,8 +20,7 @@ def calc_K(intrinsic_permeability, viscosity=MU_W):
 
 
 def require_inversion(feature):
-    """Raise an ImportError naming feature when bayesian_inversion, which the priors and the MCMC need,
-    is not installed."""
+    """Raise an ImportError naming feature when bayesian_inversion, which the priors need, is not installed."""
     if INVERSION_IMPORT_ERROR is not None:
         raise ImportError(
             f"{feature} needs bayesian_inversion, the optional dependency 'inversion' of pyheatmy"

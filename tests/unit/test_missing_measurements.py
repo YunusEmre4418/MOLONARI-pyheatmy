@@ -13,7 +13,7 @@ from pyheatmy.params import INVERSION_IMPORT_ERROR
 from pyheatmy.synthetic_MOLONARI import synthetic_MOLONARI
 
 if INVERSION_IMPORT_ERROR is None:
-    from pyheatmy.core import compute_energy
+    from bayesian_inversion import compute_energy
 needs_inversion = pytest.mark.skipif(INVERSION_IMPORT_ERROR is not None, reason="the energy needs bayesian_inversion")
 
 DEPTH_SENSORS = [0.1, 0.2, 0.3, 0.4]

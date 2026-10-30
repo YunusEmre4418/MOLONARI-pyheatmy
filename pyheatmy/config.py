@@ -60,9 +60,6 @@ RHOS_CS_SIGMA = 1e5
 RHOS_CS_DEFAULT = 5e6
 
 DEFAULT_SIGMA2_T = 1.0
-SIGMA2_MIN_T = 0.001
-SIGMA2_MAX_T = 1.0
-RANDOMWALKSIGMAT = 0.01
 
 Q_S_INTERVAL = (1e-12, 1e-5)
 Q_S_SIGMA = 1e-10
@@ -80,10 +77,6 @@ EPSILON = 1e-10
 N_UPDATE_MU = 96
 MU_W = 1e-3  # dynamic viscosity of water (Pa.s) at about 20 °C, used while the temperature law MU_A..MU_D is disabled
 ZERO_CELSIUS = 273.15
-QUANTILE_MIN = 0.05
-MEDIANE = 0.5
-QUANTILE_MAX = 0.95
-N_PARAM_MCMC = 5
 
 
 class DeviceType(Enum):
@@ -129,10 +122,4 @@ MU_D = -3.376e-5
 
 # VALEURS
 NB_CELLS = 60
-GELMANRCRITERIA = 1.2
 PARAM_LIST = ("IntrinK", "n", "lambda_s", "rhos_cs", "q_s") #a priori sigma2 a un statut particulier
-NBCHAINS = 10
-# MCMC parametrization
-NITMCMC = 200
-NBBURNING = 25
-NSAMPLEMIN = 200 #200 is the minimal number of sample for a proper calculation of the quantiles, pb of initialisation
