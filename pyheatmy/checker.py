@@ -12,24 +12,23 @@ class ComputationOrderException(Exception):
 
 def checker(checked_meth):
     """
-    Transform a bound method of user-defined class instance to a "checker" method.
-    Each method decorated with the .needed would raise a ComputationOrderException.
-    It is also possible to reset the checker with .reset.
+    Transform a method of a user-defined class into a "checker" method: calling it marks the instance, and each
+    method decorated with .needed raises a ComputationOrderException on an instance that is not marked.
+
+    The mark is a flag of the instance, so copies and pickles of the instance keep it and their own methods.
 
     Args:
-        checked_meth (method): a bound method of user-defined class instance
+        checked_meth (function): a method of a user-defined class
 
     Returns:
-            method: checker method
+            function: checker method
     """
-
-    def reset():
-        return None
+    chkd_name = "__" + checked_meth.__name__
 
     def needed(meth):
         @wraps(meth)
         def new_meth(self, *args, **kargs):
-            if hasattr(self, chkd_name) and getattr(self, chkd_name):
+            if getattr(self, chkd_name, False):
                 return meth(self, *args, **kargs)
             raise ComputationOrderException(
                 f"{checked_meth.__name__} has to be computed before calling {meth.__name__}."
@@ -39,22 +38,8 @@ def checker(checked_meth):
 
     @wraps(checked_meth)
     def wrapper(self, *args, **kwargs):
-        nonlocal wrapper
+        setattr(self, chkd_name, True)
+        return checked_meth(self, *args, **kwargs)
 
-        @wraps(checked_meth)
-        def new_wrapper(*args, **kwargs):
-            setattr(self, chkd_name, True)
-            return checked_meth(self, *args, **kwargs)
-
-        def reset():
-            setattr(self, chkd_name, False)
-
-        new_wrapper.needed = needed
-        new_wrapper.reset = reset
-        setattr(self, checked_meth.__name__, new_wrapper)
-        return new_wrapper(*args, **kwargs)
-
-    chkd_name = "__" + checked_meth.__name__
     wrapper.needed = needed
-    wrapper.reset = reset
     return wrapper
