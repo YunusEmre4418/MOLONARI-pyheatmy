@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyheatmy"
-version = "0.11.1"
+version = "0.12.0"
 readme = "README.md"
 license =  {file = "LICENSE"}
 authors = [
@@ -25,9 +25,6 @@ dependencies = [
     "nbmake"
 ]
 requires-python = ">= 3.9"
-
-[project.optional-dependencies]
-inversion = ["bayesian_inversion"]  # the priors of Layer; the direct model runs without it
 
 [project.urls]
 Homepage = "https://github.com/YunusEmre4418/MOLONARI-pyheatmy"

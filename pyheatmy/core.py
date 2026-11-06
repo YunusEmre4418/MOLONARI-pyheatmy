@@ -1,4 +1,5 @@
-from typing import List, Sequence, Union
+from typing import List, Mapping, Sequence, Union
+import copy
 import warnings
 
 import numpy as np
@@ -798,6 +799,35 @@ class Column:  # colonne de sédiments verticale entre le lit de la rivière et 
         return self._flows[z_ind, :]
 
     flows_solve = property(get_flows_solve)
+
+    def simulate(self, layers_params: Sequence[Mapping[str, float]]):
+        """The direct model as a function of the layer parameters, for an estimation or any other caller.
+        layers_params gives, for each layer of the column in order of depth, a mapping from parameter names (those
+        of Param) to physical values; a name that is not given keeps the value of the layer. The column itself is
+        left unchanged: the model runs on a copy. Returns a dict with "sensors", the temperatures (K) at the inner
+        sensors, one row per sensor as in get_measured_temperatures, and "temperatures" and "flows", the
+        temperatures (K) and specific flows (m/s) of every cell at every time."""
+        if len(layers_params) != len(self.all_layers):
+            raise ValueError(
+                f"simulate expects the parameters of {len(self.all_layers)} layers, got {len(layers_params)}."
+            )
+        run = copy.copy(self)
+        run.all_layers = [
+            Layer(layer.name, layer.zLow, **{**layer.params._asdict(), **params})
+            for layer, params in zip(self.all_layers, layers_params)
+        ]
+        run.compute_solve_transi(verbose=False)
+        temperatures = run.get_temperatures_solve()
+        return {
+            "sensors": temperatures[run.get_id_sensors()],
+            "temperatures": temperatures,
+            "flows": run.get_flows_solve(),
+        }
+
+    def get_measured_temperatures(self):
+        """Temperatures (K) measured at the inner sensors, one row per sensor and one column per time, NaN where a
+        measurement is missing; the deepest sensor gives the bottom boundary condition and is not among them."""
+        return self._T_measures.T.copy()
     # récupération des débits spécifiques au cours du temps à toutes les profondeurs (par défaut) ou bien à une profondeur donnée
 
     @compute_solve_transi.needed

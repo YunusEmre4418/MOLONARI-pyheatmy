@@ -1,6 +1,6 @@
 """Unit tests of missing temperature measurements (NaN) at the sensors of a Column: they are left out of the
-initial profile, of the energy of the MCMC and of the RMSE, and the user is told once how many are missing. The
-likelihood then covers the measured values only, so a NaN must give the same energy as the same data without it."""
+initial profile and of the RMSE, and the user is told once how many are missing. That they are left out of the
+energy of the MCMC is tested in bayesian_inversion (tests/test_energy.py)."""
 
 import warnings
 
@@ -9,12 +9,7 @@ import pytest
 
 from pyheatmy import Column, Layer
 from pyheatmy.config import NSECINDAY, ZERO_CELSIUS
-from pyheatmy.params import INVERSION_IMPORT_ERROR
 from pyheatmy.synthetic_MOLONARI import synthetic_MOLONARI
-
-if INVERSION_IMPORT_ERROR is None:
-    from bayesian_inversion import compute_energy
-needs_inversion = pytest.mark.skipif(INVERSION_IMPORT_ERROR is not None, reason="the energy needs bayesian_inversion")
 
 DEPTH_SENSORS = [0.1, 0.2, 0.3, 0.4]
 T_MEAN = ZERO_CELSIUS + 12
@@ -36,16 +31,9 @@ FIRST = 0
 MIDDLE_SENSOR = 1                                 # 0.2 m
 EMPTY_SENSOR = 2                                  # 0.3 m, no measurement at all
 MISSING_TIMES = [10, 11, 50]
-SHIFT_K = 0.5                                     # simulated = measured + SHIFT_K, as in test_energy
-SIGMA2 = 2.0                                      # log(sigma2) != 0: the number of measurements matters
-N_TIMES = 96
 MISSING = "missing"
 RTOL = 1e-12
 INTERP_RTOL = 1e-9                                # Lagrange formula against a polynomial fit
-
-
-def uniform_density(_sigma2):
-    return 1.0
 
 
 @pytest.fixture(scope="module")
@@ -71,27 +59,6 @@ def column(dH_measures, T_measures, tmp_path, inter_mode="linear"):
 
 def missing_warnings(record):
     return [str(w.message) for w in record if issubclass(w.category, UserWarning) and MISSING in str(w.message)]
-
-
-@needs_inversion
-def test_energy_leaves_out_missing_measurements():
-    rng = np.random.default_rng(0)
-    measured = T_MEAN + rng.normal(size=(len(DEPTH_SENSORS) - 1, N_TIMES))
-    simulated = measured + SHIFT_K
-    with_gaps = measured.copy()
-    with_gaps[MIDDLE_SENSOR, MISSING_TIMES] = np.nan
-    kept = ~np.isnan(with_gaps)
-    expected = compute_energy(simulated[kept], measured[kept], sigma2=SIGMA2, sigma2_distrib=uniform_density)
-    energy = compute_energy(simulated, with_gaps, sigma2=SIGMA2, sigma2_distrib=uniform_density)
-    assert energy == pytest.approx(expected, rel=RTOL)
-
-
-@needs_inversion
-def test_energy_is_not_finite_when_the_model_is_not():
-    measured = np.full((len(DEPTH_SENSORS) - 1, len(MISSING_TIMES)), T_MEAN)
-    simulated = measured + SHIFT_K
-    simulated[MIDDLE_SENSOR, FIRST] = np.nan       # a failed direct model must not look like a missing measurement
-    assert np.isnan(compute_energy(simulated, measured, sigma2=SIGMA2, sigma2_distrib=uniform_density))
 
 
 def test_complete_measurements_give_no_warning(measures, tmp_path):

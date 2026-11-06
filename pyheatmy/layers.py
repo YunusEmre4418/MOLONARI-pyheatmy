@@ -1,11 +1,7 @@
-from __future__ import annotations  # the annotations name Prior, which is missing without bayesian_inversion
-
 import numpy as np
 from pyheatmy.config import *
 
-from pyheatmy.params import Param, INVERSION_IMPORT_ERROR, require_inversion
-if INVERSION_IMPORT_ERROR is None:  # bayesian_inversion is optional: only the priors need it
-    from pyheatmy.params import Prior
+from pyheatmy.params import Param
 
 
 def check_IntrinK(value):
@@ -18,117 +14,38 @@ def check_IntrinK(value):
         )
 
 
-def check_IntrinK_prior(prior):
-    """Apply check_IntrinK to both bounds of the prior range, or to its value if the prior is fixed."""
-    for value in np.atleast_1d(prior.user_range):
-        check_IntrinK(value)
-
-
 class Layer:
+    """A layer of the column, from the bottom of the layer above (or the river bed) down to zLow, with its
+    physical parameters. The priors of an estimation are not here: they belong to the inversion, outside
+    pyheatmy."""
+
     def __init__(
         self,
         name: str,
         zLow: float,  # profondeur en m du bas de la couche (>0)
-        IntrinK: float = INTRINK_DEFAULT,
+        IntrinK: float = INTRINK_DEFAULT,  # m2
         n: float = N_DEFAULT,
         lambda_s: float = LAMBDA_S_DEFAULT,
         rhos_cs: float = RHOS_CS_DEFAULT,
         q_s: float = Q_S_DEFAULT,
-        Prior_IntrinK: Prior = None, # Prior sur IntrinK (m2), ex. Prior((1e-15, 1e-11), 7e-16)
-        Prior_n: Prior = None,
-        Prior_lambda_s: Prior = None,
-        Prior_rhos_cs: Prior = None,
-        Prior_q_s: Prior = None,
     ):
-        # Voir si tout ça ne peut pas être simplifié avec un @dataclass
-
-        # IntrinK est en m2 (valeur et prior) : les valeurs de l'ancienne notation -log10(k) sont refusées.
+        # IntrinK est en m2 : les valeurs de l'ancienne notation -log10(k) sont refusées.
         check_IntrinK(IntrinK)
-        if Prior_IntrinK is not None:
-            check_IntrinK_prior(Prior_IntrinK)
 
         self.name = name
         self.zLow = zLow
-       
-        # On stocke les priors
-        self.Prior_IntrinK = Prior_IntrinK
-        self.Prior_n = Prior_n
-        self.Prior_lambda_s = Prior_lambda_s
-        self.Prior_rhos_cs = Prior_rhos_cs
-        self.Prior_q_s = Prior_q_s
-        self.Prior_list = [Prior_IntrinK, Prior_n, Prior_lambda_s, Prior_rhos_cs, Prior_q_s]
+        self.params = Param(IntrinK, n, lambda_s, rhos_cs, q_s)
 
-        # On crée un tuple de paramètres physiques initiaux
-        physical_params = Param(IntrinK, n, lambda_s, rhos_cs, q_s)
-        
-        # On crée l'attribut mcmc_params en traduisant les valeurs physiques initiales
-        # vers l'espace de travail de la MCMC..
-        mcmc_vals = [
-            # Si un prior existe, on l'utilise pour traduire la valeur.
-            prior.physical_to_mcmc(val) if prior is not None else val
-            # Sinon (si prior est None), on considère que la valeur MCMC est la même que la valeur physique.
-            for prior, val in zip(self.Prior_list, physical_params)
-        ]
-        self.mcmc_params = Param(*mcmc_vals)
-
-    def sample(self):
-        """Met à jour mcmc_params avec des valeurs initiales tirées des priors."""
-        sampled_vals = [prior.sample() for prior in self.Prior_list]
-        self.mcmc_params = Param(*sampled_vals)
-    
-    def perturb(self):
-        """Met à jour mcmc_params en appliquant une perturbation à chaque valeur."""
-        perturbed_vals = [
-            prior.perturb(val)
-            for prior, val in zip(self.Prior_list, self.mcmc_params)
-        ]
-        self.mcmc_params = Param(*perturbed_vals)
-        
     def __repr__(self) -> str:
-        return self.name + f" : ends at {self.zLow} m. " + self.mcmc_params.__repr__()
-    
-    def set_priors_from_dict(self, priors_dict):
-        """Assigne les priors depuis un dictionnaire."""
-        require_inversion("Layer.set_priors_from_dict")
-        # Le prior sur IntrinK est vérifié avant toute modification de la couche.
-        prior_IntrinK = Prior(*priors_dict['Prior_IntrinK'])
-        check_IntrinK_prior(prior_IntrinK)
-        # Les valeurs physiques se lisent avec les priors actuels, avant de les remplacer.
-        physical_params = self.get_physical_params()
-        self.Prior_IntrinK = prior_IntrinK
-        self.Prior_n = Prior(*priors_dict['Prior_n'])
-        self.Prior_lambda_s = Prior(*priors_dict['Prior_lambda_s'])
-        self.Prior_rhos_cs = Prior(*priors_dict['Prior_rhos_cs'])
-        self.Prior_q_s = Prior(*priors_dict['Prior_q_s'])
-        self.Prior_list = [self.Prior_IntrinK, self.Prior_n, self.Prior_lambda_s, self.Prior_rhos_cs, self.Prior_q_s]
-        
-        # Il faut aussi mettre à jour les mcmc_params lorsque les priors sont assignés !
-        mcmc_vals = [
-            prior.physical_to_mcmc(val) if prior is not None else val
-            for prior, val in zip(self.Prior_list, physical_params)
-        ]
-        self.mcmc_params = Param(*mcmc_vals)
-    
+        return self.name + f" : ends at {self.zLow} m. " + self.params.__repr__()
+
     @classmethod
     def from_dict(cls, monolayer_dict):
         return cls(**monolayer_dict)
 
-    def get_physical_params(self, mcmc_params=None):
-        """
-        Retourne les paramètres en valeurs PHYSIQUES.
-        Cette version est maintenant tolérante à l'absence de Priors.
-        """
-        if mcmc_params is None:
-            mcmc_params = self.mcmc_params
-
-        # CORRECTION : On rend la traduction inverse conditionnelle.
-        physical_vals = [
-            # Si un prior existe, on l'utilise pour traduire la valeur.
-            prior.mcmc_to_physical(val) if prior is not None else val
-            # Sinon (si prior est None), on considère que la valeur est déjà physique.
-            for prior, val in zip(self.Prior_list, mcmc_params)
-        ]
-        return Param(*physical_vals)
+    def get_physical_params(self):
+        """Return the physical parameters of the layer (Param)."""
+        return self.params
 
 
 def getListParameters(layersList, z_cells):
