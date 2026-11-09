@@ -59,8 +59,6 @@ RHOS_CS_INTERVAL = (1e6, 1e7)  # Ensure PARAMBOUND is defined in config.py
 RHOS_CS_SIGMA = 1e5
 RHOS_CS_DEFAULT = 5e6
 
-DEFAULT_SIGMA2_T = 1.0
-
 Q_S_INTERVAL = (1e-12, 1e-5)
 Q_S_SIGMA = 1e-10
 Q_S_DEFAULT = 0

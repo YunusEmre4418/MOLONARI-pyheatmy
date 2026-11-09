@@ -34,10 +34,11 @@ class synthetic_MOLONARI:  # on simule un tableau de mesures
         # on définit les attribut paramètres
 
         # On verifie si param_T_riv_signal est une liste ou une liste de liste
-        if isinstance(param_T_riv_signal[0], list):
-            print("param_T_riv_signal is a list of list, generating multi periodic signal")
-        else:
-            print("param_T_riv_signal is a one level list, generating single periodic signal")
+        if verbose:
+            if isinstance(param_T_riv_signal[0], list):
+                print("param_T_riv_signal is a list of list, generating multi periodic signal")
+            else:
+                print("param_T_riv_signal is a one level list, generating single periodic signal")
 
         self._force_T_bottom = array_T_bottom
         self._param_dates = param_time_dates
@@ -60,7 +61,8 @@ class synthetic_MOLONARI:  # on simule un tableau de mesures
         self._real_z = np.array([0] + depth_sensors) + offset
 
         if self._force_T_bottom is None:
-            print("No forced bottom temperature, generating all series")
+            if self.verbose:
+                print("No bottom temperature series given (array_T_bottom), generating all series")
             self._generate_all_series()
 
         if self._force_T_bottom is not None:
